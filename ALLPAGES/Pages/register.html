@@ -1,591 +1,219 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <title>Connexion — Scola</title>
-    <style>
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #ffffff;
-        }
-
-        .logo-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
-            text-decoration: none;
-        }
-
-        .logo-wrap img {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-        }
-
-        .logo-nom {
-            font-size: 24px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 1px;
-        }
-
-        /* ====================================================
-           CARTE
-           ==================================================== */
-        .carte {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 40px 36px;
-            width: 100%;
-            max-width: 440px;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 24px 48px rgba(0,0,0,0.4);
-            animation: entree 0.4s ease;
-        }
-
-        @keyframes entree {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .carte-titre {
-            font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .carte-sous-titre {
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 28px;
-        }
-
-        /* ====================================================
-           ONGLETS — Connexion / Mot de passe oublié
-           ==================================================== */
-        .onglets {
-            display: flex;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 28px;
-            gap: 4px;
-        }
-
-        .onglet {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: transparent;
-            color: rgba(255,255,255,0.5);
-        }
-
-        .onglet.actif {
-            background: rgba(102,126,234,0.25);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        /* ====================================================
-           CHAMPS
-           ==================================================== */
-        .champ-groupe {
-            margin-bottom: 18px;
-        }
-
-        .champ-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 8px;
-        }
-
-        .champ-wrap { position: relative; }
-
-        .champ-icone {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255,255,255,0.3);
-            font-size: 15px;
-            pointer-events: none;
-        }
-
-        .champ-input {
-            width: 100%;
-            padding: 13px 14px 13px 42px;
-            background: rgba(255,255,255,0.07);
-            border: 1.5px solid rgba(255,255,255,0.12);
-            border-radius: 12px;
-            color: #ffffff;
-            font-size: 15px;
-            font-family: inherit;
-            transition: border-color 0.2s, background 0.2s;
-            box-sizing: border-box;
-        }
-
-        .champ-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: rgba(255,255,255,0.1);
-        }
-
-        .champ-input::placeholder { color: rgba(255,255,255,0.25); }
-
-        .toggle-mdp {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.35);
-            cursor: pointer;
-            font-size: 15px;
-            padding: 0;
-            transition: color 0.2s;
-        }
-
-        .toggle-mdp:hover { color: rgba(255,255,255,0.7); }
-
-        /* Lien mot de passe oublié */
-        .mdp-oublie-lien {
-            display: block;
-            text-align: right;
-            font-size: 13px;
-            color: #a78bfa;
-            text-decoration: none;
-            margin-top: -10px;
-            margin-bottom: 20px;
-            transition: color 0.2s;
-            cursor: pointer;
-        }
-
-        .mdp-oublie-lien:hover { color: #c4b5fd; }
-
-        /* ====================================================
-           MESSAGE
-           ==================================================== */
-        .message {
-            display: none;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 18px;
-            line-height: 1.5;
-        }
-
-        .message.erreur {
-            background: rgba(255,71,87,0.15);
-            border: 1px solid rgba(255,71,87,0.35);
-            color: #ff8fa3;
-        }
-
-        .message.succes {
-            background: rgba(46,213,115,0.15);
-            border: 1px solid rgba(46,213,115,0.35);
-            color: #81f5b0;
-        }
-
-        .message.info {
-            background: rgba(102,126,234,0.15);
-            border: 1px solid rgba(102,126,234,0.35);
-            color: #a5b4fc;
-        }
-
-        /* ====================================================
-           BOUTON
-           ==================================================== */
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            border-radius: 12px;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 22px rgba(102,126,234,0.5);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* ====================================================
-           SÉPARATEUR + LIEN BAS
-           ==================================================== */
-        .separateur {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 20px 0;
-            color: rgba(255,255,255,0.2);
-            font-size: 13px;
-        }
-
-        .separateur::before,
-        .separateur::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-        }
-
-        .lien-bas {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-        }
-
-        .lien-bas a {
-            color: #a78bfa;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-
-        .lien-bas a:hover { color: #c4b5fd; }
-
-        /* ====================================================
-           SECTION MOT DE PASSE OUBLIÉ
-           Cachée par défaut, visible quand on clique sur l'onglet
-           ==================================================== */
-        .section { display: none; }
-        .section.active { display: block; }
-
-        /* Info récupération */
-        .info-recuperation {
-            background: rgba(255,255,255,0.04);
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.6);
-            line-height: 1.6;
-            margin-bottom: 20px;
-            border-left: 3px solid #667eea;
-        }
-
-    </style>
+    <link rel="stylesheet" href="../Css/project.css">
+    <title>Connexion</title>
 </head>
-<body>
 
-    <!-- Logo -->
-    <a href="/" class="logo-wrap">
-        <img src="../Images/IMG_0758.PNG" alt="Logo Scola">
-        <span class="logo-nom">Scola</span>
-    </a>
+<body style="
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    min-height:80vh;
+">
 
-    <div class="carte">
+    <header class="header-accueil">
 
-        <h1 class="carte-titre">Bienvenue 👋</h1>
-        <p class="carte-sous-titre">Connecte-toi pour accéder à Scola</p>
+        <div class="containerLogo">
+            <img
+                src="../Images/IMG_0758.PNG"
+                class="logo"
+                alt="logo site"
+                width="80px"
+                height="80px"
+                style="position: relative; left:25px;"
+            >
 
-        <!-- Onglets -->
-        <div class="onglets">
-            <button class="onglet actif" id="ongletConnexion" onclick="afficherSection('connexion')">
-                <i class="fa-solid fa-right-to-bracket"></i> Connexion
-            </button>
-            <button class="onglet" id="ongletMdpOublie" onclick="afficherSection('mdpOublie')">
-                <i class="fa-solid fa-key"></i> Mot de passe oublié
-            </button>
+            <p class="name" style="position: relative; left: 5px;">
+                Scola
+            </p>
         </div>
 
-        <!-- Message -->
-        <div class="message" id="message"></div>
+        <nav>
+            <ul>
 
-        <!-- ================================================ -->
-        <!-- SECTION CONNEXION                                -->
-        <!-- ================================================ -->
-        <div class="section active" id="sectionConnexion">
-
-            <form id="loginForm" autocomplete="off">
-
-                <!-- Email -->
-                <div class="champ-groupe">
-                    <label class="champ-label" for="loginEmail">Adresse email</label>
-                    <div class="champ-wrap">
-                        <i class="fa-solid fa-envelope champ-icone"></i>
-                        <input
-                            type="email"
-                            id="loginEmail"
-                            name="email"
-                            class="champ-input"
-                            placeholder="nom@gmail.com"
-                            required
+                <li class="specialButton1">
+                    <button class="abc">
+                        <a
+                            href="../Pages/register.html"
+                            class="abc2"
                         >
-                    </div>
-                </div>
+                            Connexion
+                        </a>
+                    </button>
+                </li>
 
-                <!-- Mot de passe -->
-                <div class="champ-groupe">
-                    <label class="champ-label" for="loginMdp">Mot de passe</label>
-                    <div class="champ-wrap">
-                        <i class="fa-solid fa-lock champ-icone"></i>
-                        <input
-                            type="password"
-                            id="loginMdp"
-                            name="password"
-                            class="champ-input"
-                            placeholder="Ton mot de passe"
-                            required
-                            style="padding-right: 46px;"
+                <li class="specialButton2">
+                    <button class="abc">
+                        <a
+                            href="../Pages/inscription.html"
+                            class="abc2"
                         >
-                        <button type="button" class="toggle-mdp" onclick="toggleMdp('loginMdp', this)">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
+                            Inscription
+                        </a>
+                    </button>
+                </li>
 
-                <!-- Lien mot de passe oublié -->
-                <span class="mdp-oublie-lien" onclick="afficherSection('mdpOublie')">
-                    Mot de passe oublié ?
-                </span>
+            </ul>
+        </nav>
 
-                <!-- Bouton -->
-                <button type="submit" class="btn-submit" id="btnLogin">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    Se connecter
-                </button>
+    </header>
 
-            </form>
+    <div class="formulaire">
 
-            <div class="separateur">ou</div>
+        <!-- Formulaire de connexion -->
+        <form id="loginForm">
 
-            <div class="lien-bas">
-                Pas encore de compte ?
-                <a href="inscription.html">S'inscrire gratuitement</a>
-            </div>
+            <h1 style="text-decoration: underline;">
+                Connexion
+            </h1>
 
-        </div>
+            <h4 style="color: gray;">
+                Connecte toi à ton compte
+            </h4>
 
-        <!-- ================================================ -->
-        <!-- SECTION MOT DE PASSE OUBLIÉ                     -->
-        <!-- ================================================ -->
-        <div class="section" id="sectionMdpOublie">
+            <br>
 
-            <div class="info-recuperation">
-                <i class="fa-solid fa-circle-info"></i>
-                Saisis ton adresse email. Si un compte existe, tu recevras un email avec les instructions pour réinitialiser ton mot de passe.
-            </div>
+            <label>
 
-            <form id="resetForm" autocomplete="off">
+                Email :
 
-                <!-- Email -->
-                <div class="champ-groupe">
-                    <label class="champ-label" for="resetEmail">Adresse email du compte</label>
-                    <div class="champ-wrap">
-                        <i class="fa-solid fa-envelope champ-icone"></i>
-                        <input
-                            type="email"
-                            id="resetEmail"
-                            name="email"
-                            class="champ-input"
-                            placeholder="nom@gmail.com"
-                            required
-                        >
-                    </div>
-                </div>
+                <br>
 
-                <!-- Bouton -->
-                <button type="submit" class="btn-submit" id="btnReset">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    Envoyer le lien de réinitialisation
-                </button>
+                <input
+                    type="email"
+                    name="email"
+                    required
+                >
 
-            </form>
+            </label>
 
-            <div class="lien-bas" style="margin-top: 20px;">
-                <span onclick="afficherSection('connexion')" style="cursor:pointer; color:#a78bfa; font-weight:600;">
-                    ← Retour à la connexion
-                </span>
-            </div>
+            <br><br>
 
-        </div>
+            <label>
+
+                Password :
+
+                <br>
+
+                <input
+                    type="password"
+                    name="password"
+                    required
+                >
+
+            </label>
+
+            <br><br>
+
+            <input
+                type="submit"
+                value="Connexion"
+                id="submitButt"
+            >
+
+        </form>
 
     </div>
 
-    <script>
+<script>
 
-        // ============================================================
-        // AFFICHER UNE SECTION (connexion ou mdpOublie)
-        // ============================================================
-        function afficherSection(section) {
+// ================================
+// CONNEXION UTILISATEUR
+// ================================
 
-            // Cacher toutes les sections
-            document.getElementById("sectionConnexion").classList.remove("active");
-            document.getElementById("sectionMdpOublie").classList.remove("active");
+const loginForm =
+document.getElementById(
+    "loginForm"
+);
 
-            // Désactiver tous les onglets
-            document.getElementById("ongletConnexion").classList.remove("actif");
-            document.getElementById("ongletMdpOublie").classList.remove("actif");
+loginForm.addEventListener(
+"submit",
+async function(e){
 
-            // Cacher le message
-            document.getElementById("message").style.display = "none";
+    // Empêche le rechargement de la page
+    e.preventDefault();
 
-            if (section === "connexion") {
-                document.getElementById("sectionConnexion").classList.add("active");
-                document.getElementById("ongletConnexion").classList.add("actif");
-            } else {
-                document.getElementById("sectionMdpOublie").classList.add("active");
-                document.getElementById("ongletMdpOublie").classList.add("actif");
+    // Récupération des données
+    const email =
+    document.querySelector(
+        'input[name="email"]'
+    ).value;
+
+    const password =
+    document.querySelector(
+        'input[name="password"]'
+    ).value;
+
+    try{
+
+        // Envoie des données au serveur
+        const response =
+        await fetch(
+            "/register",
+            {
+
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    email,
+                    password
+
+                })
+
             }
+        );
+
+        const data =
+        await response.json();
+
+        // Si connexion réussie
+        if(data.token){
+
+            // Sauvegarde du JWT
+            localStorage.setItem(
+                "token",
+                data.token
+            );
+
+            alert(
+                "Connexion réussie"
+            );
+
+            // Retour accueil
+          window.location.href = "dashboard.html";;
+
+        }else{
+
+            alert(
+                data.message
+            );
 
         }
 
-        // ============================================================
-        // AFFICHER / CACHER MOT DE PASSE
-        // ============================================================
-        function toggleMdp(inputId, btn) {
-            const input = document.getElementById(inputId);
-            const icone = btn.querySelector("i");
-            if (input.type === "password") {
-                input.type = "text";
-                icone.className = "fa-solid fa-eye-slash";
-            } else {
-                input.type = "password";
-                icone.className = "fa-solid fa-eye";
-            }
-        }
+    }catch(err){
 
-        // ============================================================
-        // AFFICHER UN MESSAGE
-        // ============================================================
-        function afficherMessage(type, texte) {
-            const el = document.getElementById("message");
-            el.textContent   = texte;
-            el.className     = `message ${type}`;
-            el.style.display = "block";
-        }
+        console.log(err);
 
-        // ============================================================
-        // CONNEXION
-        // ============================================================
-        document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        alert(
+            "Erreur serveur"
+        );
 
-            e.preventDefault();
+    }
 
-            const email    = document.getElementById("loginEmail").value.trim();
-            const password = document.getElementById("loginMdp").value;
-
-            const btn = document.getElementById("btnLogin");
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connexion...';
-
-            try {
-
-                const response = await fetch("/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (data.token) {
-                    // ✅ Sauvegarder le token
-                    localStorage.setItem("token", data.token);
-
-                    afficherMessage("succes", "✅ Connexion réussie ! Redirection...");
-
-                    // Redirection vers l'accueil
-                    setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1200);
-
-                } else {
-                    afficherMessage("erreur", data.message || "Email ou mot de passe incorrect.");
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Se connecter';
-                }
-
-            } catch (err) {
-                console.log(err);
-                afficherMessage("erreur", "Erreur de connexion au serveur. Réessaie.");
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Se connecter';
-            }
-
-        });
-
-        // ============================================================
-        // MOT DE PASSE OUBLIÉ
-        // Envoie une demande de réinitialisation au serveur
-        // ============================================================
-        document.getElementById("resetForm").addEventListener("submit", async function(e) {
-
-            e.preventDefault();
-
-            const email = document.getElementById("resetEmail").value.trim();
-
-            const btn = document.getElementById("btnReset");
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Envoi en cours...';
-
-            try {
-
-                const response = await fetch("/api/reset-password", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email })
-                });
-
-                const data = await response.json();
-
-                // On affiche toujours un message de succès pour des raisons de sécurité
-                // (ne pas révéler si l'email existe ou non)
-                afficherMessage("succes", "✅ Si un compte existe avec cet email, tu recevras un lien de réinitialisation dans quelques minutes. Vérifie aussi tes spams.");
-
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer le lien de réinitialisation';
-
-            } catch (err) {
-                console.log(err);
-                afficherMessage("erreur", "Erreur serveur. Réessaie dans quelques instants.");
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer le lien de réinitialisation';
-            }
-
-        });
-
-    </script>
+});
+</script>
 
 </body>
 </html>
