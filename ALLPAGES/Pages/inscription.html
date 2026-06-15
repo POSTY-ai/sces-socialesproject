@@ -527,7 +527,7 @@
                     // ✅ Succès → redirection vers l'accueil
                     afficherMessage("succes", "✅ Compte créé avec succès ! Redirection...");
                     setTimeout(() => {
-                        window.location.href = "/";
+                        window.location.href = "dashboard.html";
                     }, 1500);
                 } else {
                     afficherMessage("erreur", data.message || "Erreur lors de l'inscription.");
