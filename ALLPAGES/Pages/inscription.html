@@ -523,13 +523,23 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // ✅ Succès → redirection vers l'accueil
-                    afficherMessage("succes", "✅ Compte créé avec succès ! Redirection...");
-                    setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1200);
-                } else {
+               if (response.ok) {
+
+    localStorage.setItem("token", data.token);
+
+    console.log("TOKEN =", data.token);
+
+    afficherMessage(
+        "succes",
+        "✅ Compte créé avec succès ! Redirection..."
+    );
+
+    setTimeout(() => {
+        window.location.href = "dashboard.html";
+    }, 1200);
+
+}
+                else {
                     afficherMessage("erreur", data.message || "Erreur lors de l'inscription.");
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Créer mon compte';
