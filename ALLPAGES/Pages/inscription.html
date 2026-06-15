@@ -1,237 +1,550 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../Css/project.css">
-    <title>Inscription</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>Inscription — Scola</title>
+    <style>
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #ffffff;
+        }
+
+        /* ====================================================
+           LOGO EN HAUT
+           ==================================================== */
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            text-decoration: none;
+        }
+
+        .logo-wrap img {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
+
+        .logo-nom {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        /* ====================================================
+           CARTE DU FORMULAIRE
+           ==================================================== */
+        .carte {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 440px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+            animation: entree 0.4s ease;
+        }
+
+        @keyframes entree {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .carte-titre {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .carte-sous-titre {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 28px;
+        }
+
+        /* ====================================================
+           CHAMPS DE SAISIE
+           ==================================================== */
+        .champ-groupe {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .champ-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 8px;
+        }
+
+        .champ-wrap {
+            position: relative;
+        }
+
+        .champ-icone {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .champ-input {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            background: rgba(255,255,255,0.07);
+            border: 1.5px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, background 0.2s;
+            box-sizing: border-box;
+        }
+
+        .champ-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .champ-input::placeholder {
+            color: rgba(255,255,255,0.25);
+        }
+
+        /* Bouton œil mot de passe */
+        .toggle-mdp {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.35);
+            cursor: pointer;
+            font-size: 15px;
+            padding: 0;
+            transition: color 0.2s;
+        }
+
+        .toggle-mdp:hover { color: rgba(255,255,255,0.7); }
+
+        /* Indicateur force mot de passe */
+        .force-wrap {
+            margin-top: 8px;
+        }
+
+        .force-barres {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 5px;
+        }
+
+        .force-barre {
+            flex: 1;
+            height: 4px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.3s;
+        }
+
+        .force-barre.faible  { background: #ff4757; }
+        .force-barre.moyen   { background: #ffa502; }
+        .force-barre.fort    { background: #2ed573; }
+
+        .force-texte {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* ====================================================
+           MESSAGE D'ERREUR / SUCCÈS
+           ==================================================== */
+        .message {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 18px;
+        }
+
+        .message.erreur {
+            background: rgba(255,71,87,0.15);
+            border: 1px solid rgba(255,71,87,0.35);
+            color: #ff8fa3;
+        }
+
+        .message.succes {
+            background: rgba(46,213,115,0.15);
+            border: 1px solid rgba(46,213,115,0.35);
+            color: #81f5b0;
+        }
+
+        /* ====================================================
+           BOUTON SOUMETTRE
+           ==================================================== */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(102,126,234,0.5);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ====================================================
+           RÈGLES DU MOT DE PASSE
+           ==================================================== */
+        .regles-mdp {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.8;
+        }
+
+        .regle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .regle i {
+            font-size: 11px;
+            width: 14px;
+        }
+
+        .regle.ok { color: #2ed573; }
+        .regle.ok i { color: #2ed573; }
+
+        /* ====================================================
+           LIEN CONNEXION
+           ==================================================== */
+        .lien-bas {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .lien-bas a {
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .lien-bas a:hover { color: #c4b5fd; }
+
+        /* Séparateur */
+        .separateur {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: rgba(255,255,255,0.2);
+            font-size: 13px;
+        }
+
+        .separateur::before,
+        .separateur::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+    </style>
 </head>
+<body>
 
-<body style="
-    margin:0;
-    padding:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    min-height:80vh;
-">
+    <!-- Logo -->
+    <a href="/" class="logo-wrap">
+        <img src="../Images/IMG_0758.PNG" alt="Logo Scola">
+        <span class="logo-nom">Scola</span>
+    </a>
 
-    <header class="header-accueil">
+    <!-- Carte formulaire -->
+    <div class="carte">
 
-        <div class="containerLogo">
-            <img
-                src="../Images/IMG_0758.PNG"
-                class="logo"
-                alt="logo site"
-                width="80px"
-                height="80px"
-                style="position: relative; left:25px;"
-            >
+        <h1 class="carte-titre">Créer un compte</h1>
+        <p class="carte-sous-titre">Rejoins Scola gratuitement et commence à réviser</p>
 
-            <p class="name" style="position: relative; left: 5px;">
-                Scola
-            </p>
-        </div>
+        <!-- Message erreur/succès -->
+        <div class="message" id="message"></div>
 
-        <nav>
-            <ul>
+        <form id="signupForm" autocomplete="off">
 
-                <li class="specialButton1">
-                    <button class="abc">
-                        <a
-                            href="../Pages/register.html"
-                            class="abc2"
-                        >
-                            Connexion
-                        </a>
+            <!-- Nom -->
+            <div class="champ-groupe">
+                <label class="champ-label" for="inputNom">Nom complet</label>
+                <div class="champ-wrap">
+                    <i class="fa-solid fa-user champ-icone"></i>
+                    <input
+                        type="text"
+                        id="inputNom"
+                        name="name"
+                        class="champ-input"
+                        placeholder="Jean Baptiste"
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="champ-groupe">
+                <label class="champ-label" for="inputEmail">Adresse email</label>
+                <div class="champ-wrap">
+                    <i class="fa-solid fa-envelope champ-icone"></i>
+                    <input
+                        type="email"
+                        id="inputEmail"
+                        name="email"
+                        class="champ-input"
+                        placeholder="nom@gmail.com"
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="champ-groupe">
+                <label class="champ-label" for="inputMdp">Mot de passe</label>
+                <div class="champ-wrap">
+                    <i class="fa-solid fa-lock champ-icone"></i>
+                    <input
+                        type="password"
+                        id="inputMdp"
+                        name="password"
+                        class="champ-input"
+                        placeholder="Minimum 8 caractères"
+                        required
+                        oninput="verifierForce(this.value)"
+                        style="padding-right: 46px;"
+                    >
+                    <button type="button" class="toggle-mdp" onclick="toggleMdp('inputMdp', this)">
+                        <i class="fa-solid fa-eye"></i>
                     </button>
-                </li>
+                </div>
 
-                <li class="specialButton2">
-                    <button class="abc">
-                        <a
-                            href="../Pages/inscription.html"
-                            class="abc2"
-                        >
-                            Inscription
-                        </a>
-                    </button>
-                </li>
+                <!-- Indicateur de force -->
+                <div class="force-wrap" id="forceWrap" style="display:none;">
+                    <div class="force-barres">
+                        <div class="force-barre" id="fb1"></div>
+                        <div class="force-barre" id="fb2"></div>
+                        <div class="force-barre" id="fb3"></div>
+                        <div class="force-barre" id="fb4"></div>
+                    </div>
+                    <div class="force-texte" id="forceTexte"></div>
+                </div>
 
-            </ul>
-        </nav>
+                <!-- Règles du mot de passe -->
+                <div class="regles-mdp">
+                    <div class="regle" id="regle-long"><i class="fa-solid fa-circle"></i> Au moins 8 caractères</div>
+                    <div class="regle" id="regle-maj"><i class="fa-solid fa-circle"></i> Une lettre majuscule</div>
+                    <div class="regle" id="regle-min"><i class="fa-solid fa-circle"></i> Une lettre minuscule</div>
+                    <div class="regle" id="regle-chiffre"><i class="fa-solid fa-circle"></i> Un chiffre</div>
+                </div>
+            </div>
 
-    </header>
-
-    <div class="formulaire">
-
-        <!-- Formulaire inscription -->
-        <form id="signupForm" class="form1">
-
-            <h1 style="text-decoration: underline;color: white;">
-                Inscription
-            </h1>
-
-            <h4 style="color: gray;">
-                Crée ton compte gratuitement
-            </h4>
-
-            <br>
-
-            <label>
-
-                Nom :
-
-                <br>
-
-                <input
-                    type="text"
-                    name="name"
-                    required
-                >
-
-            </label>
-
-            <br><br>
-
-            <label>
-
-                Email :
-
-                <br>
-
-                <input
-                    type="email"
-                    name="email"
-                    required
-                >
-
-            </label>
-
-            <br><br>
-
-            <label>
-
-                Password :
-
-                <br>
-
-                <input
-                    type="password"
-                    name="password"
-                    required
-                >
-
-            </label>
-
-            <br><br>
-
-            <input
-                type="submit"
-                value="Créer un compte"
-                id="submitButt"
-            >
-            <p>
-
-                Mot de passe :
-
-                minimum 8 caractères,
-
-                1 majuscule,
-
-                1 minuscule,
-
-                1 chiffre.
-</p>
+            <!-- Bouton -->
+            <button type="submit" class="btn-submit" id="btnSubmit">
+                <i class="fa-solid fa-user-plus"></i>
+                Créer mon compte
+            </button>
 
         </form>
 
+        <div class="separateur">ou</div>
+
+        <div class="lien-bas">
+            Tu as déjà un compte ?
+            <a href="register.html">Se connecter</a>
+        </div>
+
     </div>
 
-<script>
+    <script>
 
-// ================================
-// INSCRIPTION UTILISATEUR
-// ================================
-
-const signupForm =
-document.getElementById(
-    "signupForm"
-);
-
-signupForm.addEventListener(
-"submit",
-async function(e){
-
-    e.preventDefault();
-
-    const name =
-    document.querySelector(
-        'input[name="name"]'
-    ).value;
-
-    const email =
-    document.querySelector(
-        'input[name="email"]'
-    ).value;
-
-    const password =
-    document.querySelector(
-        'input[name="password"]'
-    ).value;
-
-    try{
-
-        const response =
-        await fetch(
-            "/inscription",
-            {
-
-                method:"POST",
-
-                headers:{
-                    "Content-Type":
-                    "application/json"
-                },
-
-                body: JSON.stringify({
-
-                    name,
-                    email,
-                    password
-
-                })
-
+        // ============================================================
+        // AFFICHER / CACHER LE MOT DE PASSE
+        // ============================================================
+        function toggleMdp(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icone = btn.querySelector("i");
+            if (input.type === "password") {
+                input.type = "text";
+                icone.className = "fa-solid fa-eye-slash";
+            } else {
+                input.type = "password";
+                icone.className = "fa-solid fa-eye";
             }
-        );
-
-        const text =
-        await response.text();
-
-        alert(text);
-
-        // Si inscription réussie
-        if(response.ok){
-
-            // Redirection vers connexion
-            window.location.href =
-            "/Pages/dashboard.html"
-
         }
 
-    }catch(err){
+        // ============================================================
+        // VÉRIFIER LA FORCE DU MOT DE PASSE
+        // ============================================================
+        function verifierForce(mdp) {
 
-        console.log(err);
+            document.getElementById("forceWrap").style.display = mdp ? "block" : "none";
 
-        alert(
-            "Erreur serveur"
-        );
+            const long    = mdp.length >= 8;
+            const maj     = /[A-Z]/.test(mdp);
+            const min     = /[a-z]/.test(mdp);
+            const chiffre = /[0-9]/.test(mdp);
+            const special = /[^a-zA-Z0-9]/.test(mdp);
 
-    }
+            // Mettre à jour les règles visuelles
+            majRegle("regle-long",   long);
+            majRegle("regle-maj",    maj);
+            majRegle("regle-min",    min);
+            majRegle("regle-chiffre", chiffre);
 
-});
-</script>
+            // Calculer la force
+            let force = [long, maj, min, chiffre, special].filter(Boolean).length;
+
+            const barres  = ["fb1","fb2","fb3","fb4"];
+            const classes = ["", "faible", "faible", "moyen", "fort", "fort"];
+            const textes  = ["", "Très faible", "Faible", "Moyen", "Fort", "Très fort"];
+
+            barres.forEach((id, i) => {
+                const b = document.getElementById(id);
+                b.className = "force-barre";
+                if (i < force) b.classList.add(classes[force]);
+            });
+
+            document.getElementById("forceTexte").textContent = textes[force] || "";
+        }
+
+        function majRegle(id, ok) {
+            const el = document.getElementById(id);
+            el.className = ok ? "regle ok" : "regle";
+            el.querySelector("i").className = ok ? "fa-solid fa-circle-check" : "fa-solid fa-circle";
+        }
+
+        // ============================================================
+        // AFFICHER UN MESSAGE
+        // ============================================================
+        function afficherMessage(type, texte) {
+            const el = document.getElementById("message");
+            el.textContent = texte;
+            el.className   = `message ${type}`;
+            el.style.display = "block";
+        }
+
+        // ============================================================
+        // SOUMISSION DU FORMULAIRE
+        // ============================================================
+        document.getElementById("signupForm").addEventListener("submit", async function(e) {
+
+            e.preventDefault();
+
+            const name     = document.getElementById("inputNom").value.trim();
+            const email    = document.getElementById("inputEmail").value.trim();
+            const password = document.getElementById("inputMdp").value;
+
+            // Validation nom
+            const nomRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
+            if (!nomRegex.test(name)) {
+                afficherMessage("erreur", "Le nom doit contenir entre 2 et 50 lettres uniquement.");
+                return;
+            }
+
+            // Validation email
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                afficherMessage("erreur", "Adresse email invalide. Exemple : nom@gmail.com");
+                return;
+            }
+
+            // Validation mot de passe
+            const mdpRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!mdpRegex.test(password)) {
+                afficherMessage("erreur", "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.");
+                return;
+            }
+
+            // Désactiver le bouton pendant l'envoi
+            const btn = document.getElementById("btnSubmit");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Création en cours...';
+
+            try {
+
+                const response = await fetch("/inscription", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // ✅ Succès → redirection vers l'accueil
+                    afficherMessage("succes", "✅ Compte créé avec succès ! Redirection...");
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 1500);
+                } else {
+                    afficherMessage("erreur", data.message || "Erreur lors de l'inscription.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Créer mon compte';
+                }
+
+            } catch (err) {
+                console.log(err);
+                afficherMessage("erreur", "Erreur de connexion au serveur. Réessaie.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Créer mon compte';
+            }
+
+        });
+
+    </script>
 
 </body>
 </html>
