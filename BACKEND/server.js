@@ -79,8 +79,17 @@ if (!emailRegex.test(email)) {
         const newUser = new User({ name, email, password: hashedPassword });
         await newUser.save();
 
+        const token = jwt.sign(
+    { email: newUser.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+);
+
         console.log("✅ Nouvel utilisateur :", email);
-        res.status(200).json({ message: "Inscription réussie" });
+        res.status(200).json({
+    message: "Inscription réussie",
+    token
+});
 
     } catch (err) {
         console.log(err);
