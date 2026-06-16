@@ -48,15 +48,14 @@
                 </div>
             </div>
         </div>
-        <div class="banniere-semaine">
-            <div class="contenu-banniere">
-               
-                <h4> <h5>Theme de la semaine</h5><br>Gouvernements Haïtiens <button id="btnJouer"> <a href="jouer.html" class="jouer" >▶ Jouer</a> </button></h4>
-                <div id="messageJour" style="display:none; color:#ff4757; margin-top:10px; font-size:14px;"></div>
-            </div>
-            <!-- Message affiché si l'élève a déjà joué -->
-
-        </div>
+       <div class="banniere-semaine">
+    <div class="contenu-banniere">
+        <h5>Thème de la semaine</h5>
+        <h4 id="themeSemaine">Gouvernements Haïtiens</h4>
+        <h5 id="themeJour">Chargement...</h5>
+        <button><a href="jouer.html" class="jouer">▶ Jouer</a></button>
+    </div>
+</div>
         <div class="podium-visuel">
             <h3 style="margin-bottom: 200px;color: gray;">Top 3 de la semaine</h3>
             <div class="podium-deuxieme">
@@ -142,6 +141,34 @@ async function chargerLigue() {
     }
 
 }
+
+// ============================================================
+// THÈMES PAR JOUR — même logique que jouer.html
+// ============================================================
+const THEMES_SEMAINE = {
+    1: "Sténio Vincent",
+    2: "Élie Lescot",
+    3: "Dumarsais Estimé",
+    4: "Paul Magloire",
+    5: "Occupation Américaine en Haïti"
+};
+
+function afficherThemeDuJour() {
+    const jour = new Date().getDay();
+    // getDay() : 0=dimanche, 1=lundi ... 5=vendredi, 6=samedi
+
+    const theme = THEMES_SEMAINE[jour];
+
+    if (theme) {
+        // Jour de semaine → afficher le thème du jour
+        document.getElementById("themeJour").textContent = "📚 Aujourd'hui : " + theme;
+    } else {
+        // Samedi ou dimanche → pas de quiz ce jour
+        document.getElementById("themeJour").textContent = "⏸ Reprise lundi prochain";
+    }
+}
+
+afficherThemeDuJour();
 
 async function chargerTop3(){
 

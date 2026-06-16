@@ -401,122 +401,55 @@
         </div>
 
     </div>
-
     <script>
-     
-
-        // ============================================================
-// BLOQUER LE RETOUR NAVIGATEUR VERS CETTE PAGE
-// history.pushState crée une fausse entrée dans l'historique
-// Quand l'élève clique sur "retour", on intercepte et on redirige
-// ============================================================
-
-// ============================================================
-// VÉRIFICATION AU CHARGEMENT DE LA PAGE
-// Si l'élève a déjà joué aujourd'hui → on ne lui montre pas le jeu
-// Cette vérification se fait côté serveur donc impossible à contourner
-// ============================================================
-
+// Vérification accès avant jeu
 async function verifierAccesAvantJeu() {
-
     const token = localStorage.getItem("token");
-
-    // Pas connecté → retour à la connexion
     if (!token) {
         window.location.href = "register.html";
         return;
     }
-
     try {
-
         const response = await fetch("/api/quiz/check", {
             headers: { Authorization: `Bearer ${token}` }
         });
-
         const data = await response.json();
-
         if (!data.canPlay) {
-
-            // ✅ Remplacer TOUT le contenu par un écran de blocage
-            // L'élève ne voit plus le jeu du tout
             document.body.innerHTML = `
-                <div style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    min-height: 100vh;
-                    font-family: Inter, sans-serif;
-                    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-                    color: white;
-                    text-align: center;
-                    padding: 20px;
-                ">
-                    <div style="font-size: 64px; margin-bottom: 20px;">⏳</div>
-
-                    <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px;">
+                <div style="display:flex;flex-direction:column;align-items:center;
+                justify-content:center;min-height:100vh;font-family:Inter,sans-serif;
+                background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+                color:white;text-align:center;padding:20px;">
+                    <div style="font-size:64px;margin-bottom:20px;">⏳</div>
+                    <h1 style="font-size:24px;font-weight:800;margin-bottom:12px;">
                         Tu as déjà joué aujourd'hui !
                     </h1>
-
-                    <p style="
-                        font-size: 15px;
-                        color: rgba(255,255,255,0.6);
-                        max-width: 360px;
-                        line-height: 1.6;
-                        margin-bottom: 32px;
-                    ">
-                        Reviens demain pour continuer à gagner des XP et grimper dans le classement. 🔥
+                    <p style="font-size:15px;color:rgba(255,255,255,0.6);
+                    max-width:360px;line-height:1.6;margin-bottom:32px;">
+                        Reviens demain pour continuer à gagner des XP. 🔥
                     </p>
-
-                    <a href="liguebac.html" style="
-                        padding: 14px 28px;
-                        background: linear-gradient(135deg, #667eea, #764ba2);
-                        border-radius: 14px;
-                        color: white;
-                        text-decoration: none;
-                        font-size: 15px;
-                        font-weight: 700;
-                    ">
+                    <a href="liguebac.html" style="padding:14px 28px;
+                    background:linear-gradient(135deg,#667eea,#764ba2);
+                    border-radius:14px;color:white;text-decoration:none;
+                    font-size:15px;font-weight:700;">
                         Voir mon classement
                     </a>
-                </div>
-            `;
-
-            // Bloquer définitivement le retour arrière
-            // replaceState remplace l'historique au lieu d'ajouter
+                </div>`;
             window.history.replaceState(null, "", "liguebac.html");
             return;
-
         }
-
-        // ✅ L'élève peut jouer → lancer le jeu normalement
         initialiserJeu();
-
     } catch (err) {
         console.log("❌ Erreur vérification :", err);
-        // En cas d'erreur réseau → lancer quand même le jeu
         initialiserJeu();
     }
-
 }
 
-// ============================================================
-// REMPLACER l'ancien appel initialiserJeu() par celui-ci
-// ============================================================
 verifierAccesAvantJeu();
-   // ============================================================
-        // BANQUE DE QUESTIONS — 3 thèmes, 10 questions chacun
-        // Chaque objet contient : question, answers (tableau), correct (index)
-        // correct = l'index (position) de la bonne réponse dans answers
-        // ============================================================
-  
 
-       // ============================================================
-// SEMAINE 1 — GOUVERNEMENTS HAÏTIENS
-// 5 thèmes × 50 questions = 250 questions au total
-// Chaque jour : 10 questions tirées aléatoirement de la banque
 // ============================================================
-
+// BANQUE DE QUESTIONS
+// ============================================================
 const banqueQuestions = {
 
     // ============================================================
@@ -1807,10 +1740,8 @@ const banqueQuestions = {
 }; // Fin de banqueQuestions
 
 // ============================================================
-// THÈME DU JOUR — associe chaque jour de la semaine à un thème
-// 1=lundi, 2=mardi, 3=mercredi, 4=jeudi, 5=vendredi
+// THÈME DU JOUR
 // ============================================================
-
 const THEMES_SEMAINE_1 = {
     1: "Sténio Vincent",
     2: "Élie Lescot",
@@ -1820,16 +1751,11 @@ const THEMES_SEMAINE_1 = {
 };
 
 function getThemeDuJour() {
-    const jourActuel = new Date().getDay();
-    // getDay() : 0=dimanche, 1=lundi ... 5=vendredi, 6=samedi
-    return THEMES_SEMAINE_1[jourActuel] || "Sténio Vincent";
-    // Si on est samedi ou dimanche → afficher Sténio Vincent par défaut
+    const jour = new Date().getDay();
+    return THEMES_SEMAINE_1[jour] || "Sténio Vincent";
 }
 
-// ============================================================
-// MÉLANGER ET SÉLECTIONNER 10 QUESTIONS ALÉATOIRES
-// ============================================================
-
+// Une seule fonction melangerTableau
 function melangerTableau(tab) {
     const c = [...tab];
     for (let i = c.length - 1; i > 0; i--) {
@@ -1839,346 +1765,194 @@ function melangerTableau(tab) {
     return c;
 }
 
+// Thème et questions du jour
 const themeDuJour = getThemeDuJour();
-// Prendre 10 questions aléatoires du thème du jour
-const questionsDuJour = melangerTableau(banqueQuestions[themeDuJour]).slice(0, 10);
-        // ============================================================
-        // SÉLECTION DU THÈME DE LA SEMAINE
-        // On utilise le numéro de semaine pour choisir automatiquement
-        // le bon thème — chaque semaine = un thème différent
-        // ============================================================
 
-        function getNumeroSemaine() {
-            const now = new Date();
-            const debut = new Date(now.getFullYear(), 0, 1);
-            // Math.ceil = arrondit vers le haut
-            return Math.ceil(((now - debut) / 86400000 + debut.getDay() + 1) / 7);
+// ============================================================
+// VARIABLES D'ÉTAT
+// ============================================================
+let questions = [];
+let indexQuestion = 0;
+let score = 0;
+let bonnesReponses = 0;
+let mauvaisesReponses = 0;
+let timer = null;
+let secondes = 20;
+let tempsTotal = 0;
+let aRepondu = false;
+
+// ============================================================
+// INITIALISER LE JEU
+// ============================================================
+function initialiserJeu() {
+    questions = melangerTableau(banqueQuestions[themeDuJour]).slice(0, 10);
+    indexQuestion = 0;
+    score = 0;
+    bonnesReponses = 0;
+    mauvaisesReponses = 0;
+    tempsTotal = 0;
+    aRepondu = false;
+    document.getElementById('jeu-zone').style.display = 'block';
+    document.getElementById('jeu-resultats').style.display = 'none';
+    afficherQuestion();
+}
+
+// ============================================================
+// AFFICHER UNE QUESTION
+// ============================================================
+function afficherQuestion() {
+    aRepondu = false;
+    const q = questions[indexQuestion];
+    const lettres = ['A', 'B', 'C', 'D'];
+
+    document.getElementById('jeu-compteur').textContent =
+        `Question ${indexQuestion + 1} / ${questions.length}`;
+    document.getElementById('jeu-progress').style.width =
+        `${(indexQuestion / questions.length) * 100}%`;
+    document.getElementById('jeu-theme').textContent = themeDuJour;
+    document.getElementById('jeu-question').textContent = q.question;
+
+    const conteneur = document.getElementById('jeu-reponses');
+    conteneur.innerHTML = '';
+    q.answers.forEach((reponse, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'jeu-reponse-btn';
+        btn.innerHTML = `
+            <span class="jeu-lettre">${lettres[index]}</span>
+            <span>${reponse}</span>
+        `;
+        btn.onclick = () => verifierReponse(index, btn, q.correct);
+        conteneur.appendChild(btn);
+    });
+
+    document.getElementById('jeu-feedback').style.display = 'none';
+    document.getElementById('jeu-suivant').style.display = 'none';
+    demarrerTimer();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function demarrerTimer() {
+    if (timer) clearInterval(timer);
+    secondes = 20;
+    const timerEl = document.getElementById('jeu-timer');
+    timerEl.textContent = secondes;
+    timerEl.classList.remove('urgent');
+
+    timer = setInterval(() => {
+        secondes--;
+        tempsTotal++;
+        timerEl.textContent = secondes;
+        if (secondes <= 5) timerEl.classList.add('urgent');
+        if (secondes <= 0) {
+            clearInterval(timer);
+            if (!aRepondu) tempEcoule();
         }
-
-        // Liste des thèmes dans l'ordre
-        const themes = Object.keys(banqueQuestions);
-        // Object.keys = retourne un tableau des clés de l'objet
-        // ex: ["Union Européenne & Haïti", "Sténio Vincent...", "Occupation..."]
-
-        // On choisit le thème selon la semaine en cours
-        // % themes.length = modulo — recommence depuis le début quand on dépasse la liste
-        const indexTheme = getNumeroSemaine() % themes.length;
-        const themeCourant = themes[indexTheme];
-
-        // ============================================================
-        // VARIABLES D'ÉTAT DU JEU
-        // Ces variables gardent en mémoire où on en est dans le quiz
-        // ============================================================
-
-        let questions = [];          // les 10 questions mélangées de la session
-        let indexQuestion = 0;       // numéro de la question en cours (commence à 0)
-        let score = 0;               // nombre de bonnes réponses
-        let bonnesReponses = 0;      // compteur bonnes réponses (pour les stats)
-        let mauvaisesReponses = 0;   // compteur mauvaises réponses
-        let timer = null;            // référence au setInterval du timer
-        let secondes = 15;           // secondes restantes pour la question en cours
-        let tempsTotal = 0;          // temps total passé sur toutes les questions
-        let aRepondu = false;        // true si l'élève a déjà répondu à la question
-
-        // ============================================================
-        // MÉLANGER LES QUESTIONS — ordre aléatoire à chaque session
-        // Fisher-Yates shuffle = algorithme de mélange standard
-        // ============================================================
-
-        function melangerTableau(tableau) {
-            const copie = [...tableau]; // ... = spread operator, copie le tableau sans modifier l'original
-            for (let i = copie.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                // Math.random() = nombre aléatoire entre 0 et 1
-                // Math.floor = arrondit vers le bas
-                [copie[i], copie[j]] = [copie[j], copie[i]];
-                // destructuring swap = échange les deux éléments en une ligne
-            }
-            return copie;
-        }
-
-        // ============================================================
-        // INITIALISER LE JEU — appelé au chargement et au rejouer
-        // ============================================================
-
-        function initialiserJeu() {
-            // Mélanger et prendre 10 questions du thème courant
-            questions = melangerTableau(banqueQuestions[themeCourant]).slice(0, 10);
-            // .slice(0, 10) = prend les 10 premières questions du tableau mélangé
-
-            // Réinitialiser toutes les variables
-            indexQuestion = 0;
-            score = 0;
-            bonnesReponses = 0;
-            mauvaisesReponses = 0;
-            tempsTotal = 0;
-            aRepondu = false;
-
-            // Afficher la zone de jeu et cacher les résultats
-            document.getElementById('jeu-zone').style.display = 'block';
-            document.getElementById('jeu-resultats').style.display = 'none';
-
-            // Afficher la première question
-            afficherQuestion();
-        }
-
-        // ============================================================
-        // AFFICHER UNE QUESTION
-        // Met à jour tous les éléments visuels pour la question en cours
-        // ============================================================
-
-        function afficherQuestion() {
-            aRepondu = false;
-            const q = questions[indexQuestion]; // question actuelle
-            const lettres = ['A', 'B', 'C', 'D']; // lettres des boutons
-
-            // Mettre à jour le compteur "Question X / 10"
-            document.getElementById('jeu-compteur').textContent =
-                `Question ${indexQuestion + 1} / ${questions.length}`;
-
-            // Mettre à jour la barre de progression
-            // (indexQuestion / questions.length) * 100 = pourcentage d'avancement
-            document.getElementById('jeu-progress').style.width =
-                `${(indexQuestion / questions.length) * 100}%`;
-
-            // Afficher le thème
-            document.getElementById('jeu-theme').textContent = themeCourant;
-
-            // Afficher le texte de la question
-            document.getElementById('jeu-question').textContent = q.question;
-
-            // Générer les 4 boutons de réponse
-            const conteneur = document.getElementById('jeu-reponses');
-            conteneur.innerHTML = ''; // vider les anciens boutons
-
-            q.answers.forEach((reponse, index) => {
-                // forEach parcourt chaque réponse avec son index (0,1,2,3)
-                const btn = document.createElement('button');
-                btn.className = 'jeu-reponse-btn';
-                btn.innerHTML = `
-                    <span class="jeu-lettre">${lettres[index]}</span>
-                    <span>${reponse}</span>
-                `;
-                // Quand on clique sur ce bouton, on appelle verifierReponse avec l'index
-                btn.onclick = () => verifierReponse(index, btn, q.correct);
-                conteneur.appendChild(btn); // ajouter le bouton au conteneur
-            });
-
-            // Cacher le feedback et le bouton suivant
-            document.getElementById('jeu-feedback').style.display = 'none';
-            document.getElementById('jeu-suivant').style.display = 'none';
-
-            // Démarrer le timer
-            demarrerTimer();
-        }
-
-        // ============================================================
-        // TIMER — compte à rebours de 15 secondes
-        // Utilise setInterval pour répéter toutes les 1000ms (1 seconde)
-        // ============================================================
-
-        function demarrerTimer() {
-            // Arrêter le timer précédent s'il existe encore
-            if (timer) clearInterval(timer);
-
-            secondes = 20; // reset à 20 secondes
-            const timerEl = document.getElementById('jeu-timer');
-            timerEl.textContent = secondes;
-            timerEl.classList.remove('urgent'); // enlever la couleur rouge
-
-            timer = setInterval(() => {
-                // Cette fonction s'exécute toutes les 1 seconde
-                secondes--;
-                tempsTotal++; // incrémenter le temps total
-                timerEl.textContent = secondes;
-
-                // Timer rouge quand il reste 5 secondes ou moins
-                if (secondes <= 5) timerEl.classList.add('urgent');
-
-                if (secondes <= 0) {
-                    // Temps écoulé — forcer une mauvaise réponse
-                    clearInterval(timer);
-                    if (!aRepondu) tempEcoule();
-                }
-            }, 1000);
-            // 1000 = 1000 millisecondes = 1 seconde
-        }
-
-        // ============================================================
-        // TEMPS ÉCOULÉ — appelé quand le timer arrive à 0
-        // ============================================================
-
-        function tempEcoule() {
-            aRepondu = true;
-            mauvaisesReponses++;
-
-            // Désactiver tous les boutons
-            document.querySelectorAll('.jeu-reponse-btn').forEach(btn => {
-                btn.disabled = true;
-            });
-
-            // Mettre en vert le bon bouton pour montrer la bonne réponse
-            const boutons = document.querySelectorAll('.jeu-reponse-btn');
-            boutons[questions[indexQuestion].correct].classList.add('correct');
-
-            // Afficher le feedback
-            afficherFeedback(false, "⏱ Temps écoulé ! Voici la bonne réponse.");
-
-            document.getElementById('jeu-suivant').style.display = 'block';
-        }
-
-        // ============================================================
-        // VÉRIFIER LA RÉPONSE — appelé quand l'élève clique sur un bouton
-        // ============================================================
-
-        function verifierReponse(indexChoisi, btnChoisi, indexCorrect) {
-            if (aRepondu) return; // empêche de répondre deux fois
-            aRepondu = true;
-
-            clearInterval(timer); // arrêter le timer
-
-            const estCorrect = indexChoisi === indexCorrect;
-            // true si l'index choisi correspond à l'index correct
-
-            // Désactiver tous les boutons de réponse
-            document.querySelectorAll('.jeu-reponse-btn').forEach(btn => {
-                btn.disabled = true;
-            });
-
-            if (estCorrect) {
-                // ✅ Bonne réponse
-                btnChoisi.classList.add('correct');
-                score++;
-                bonnesReponses++;
-                afficherFeedback(true, "✅ Bonne réponse !");
-            } else {
-                // ❌ Mauvaise réponse
-                btnChoisi.classList.add('incorrect');
-                mauvaisesReponses++;
-
-                // Montrer quelle était la bonne réponse en vert
-                document.querySelectorAll('.jeu-reponse-btn')[indexCorrect]
-                    .classList.add('correct');
-
-                afficherFeedback(false, "❌ Mauvaise réponse.");
-            }
-
-            // Afficher le bouton "Question suivante"
-            document.getElementById('jeu-suivant').style.display = 'block';
-        }
-
-        // ============================================================
-        // AFFICHER LE FEEDBACK — message sous les réponses
-        // ============================================================
-
-        function afficherFeedback(estCorrect, message) {
-            const feedback = document.getElementById('jeu-feedback');
-            feedback.textContent = message;
-            feedback.className = `jeu-feedback ${estCorrect ? 'correct' : 'incorrect'}`;
-            feedback.style.display = 'block';
-        }
-
-        // ============================================================
-        // QUESTION SUIVANTE — passe à la prochaine question ou aux résultats
-        // ============================================================
-
-        function questionSuivante() {
-            indexQuestion++;
-            // indexQuestion++ = incrémente de 1 (ex: 0 → 1 → 2...)
-
-            if (indexQuestion < questions.length) {
-                // Il reste des questions → afficher la suivante
-                afficherQuestion();
-            } else {
-                // Plus de questions → afficher les résultats
-                afficherResultats();
-            }
-        }
-
-        // ============================================================
-        // AFFICHER LES RÉSULTATS FINAUX
-        // ============================================================
-
-        function afficherResultats() {
-            clearInterval(timer); // arrêter le timer
-
-            // Cacher la zone de jeu, afficher les résultats
-            document.getElementById('jeu-zone').style.display = 'none';
-            document.getElementById('jeu-resultats').style.display = 'block';
-
-            // Calculer les XP gagnés
-            // 10 XP par bonne réponse + 20 XP bonus si score parfait
-            const xpGagnes = (bonnesReponses * 10) + (bonnesReponses === 10 ? 20 : 0);
-
-            // Choisir l'emoji selon le score
-            let emoji = '😔';
-            if (score >= 8) emoji = '🏆';
-            else if (score >= 6) emoji = '🎉';
-            else if (score >= 4) emoji = '👍';
-
-            // Mettre à jour tous les éléments de l'écran résultats
-            document.getElementById('res-emoji').textContent = emoji;
-            document.getElementById('res-score').textContent = `${score} / ${questions.length}`;
-            document.getElementById('res-xp').textContent = `+${xpGagnes} XP gagnés`;
-            document.getElementById('res-bonnes').textContent = bonnesReponses;
-            document.getElementById('res-mauvaises').textContent = mauvaisesReponses;
-            // Temps moyen par question = temps total / nombre de questions
-            document.getElementById('res-temps').textContent =
-                `${Math.round(tempsTotal / questions.length)}s`;
-
-            // Mettre à jour la barre de progression à 100%
-            document.getElementById('jeu-progress').style.width = '100%';
-
-            // Envoyer les XP au serveur si l'utilisateur est connecté
-            envoyerXP(xpGagnes);
-        }
-
-        // ============================================================
-        // ENVOYER LES XP AU SERVEUR
-        // Appelé après chaque session terminée
-        // fetch = outil JavaScript pour faire des requêtes HTTP
-        // ============================================================
-
-        async function envoyerXP(xpGagnes) {
-            const token = localStorage.getItem('token');
-            // Si pas connecté, on n'envoie rien
-            if (!token) return;
-
-            try {
-                // fetch envoie une requête POST à notre serveur Node/Express
-                const response = await fetch('/api/ajouter-xp', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Authorization = on envoie le token pour prouver qui on est
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ pointsGagnes: xpGagnes })
-                    // JSON.stringify = convertit l'objet JS en texte JSON pour l'envoyer
-                });
-
-                const data = await response.json();
-                // await = on attend que le serveur réponde avant de continuer
-
-                console.log('✅ XP envoyés :', data.message);
-
-            } catch (err) {
-                console.log('❌ Erreur envoi XP :', err);
-            }
-        }
-
-        // ============================================================
-        // REJOUER — réinitialise et relance le quiz
-        // ============================================================
-
-        function rejouer() {
-            initialiserJeu();
-        }
-
-        // ============================================================
-        // DÉMARRAGE — lancer le jeu au chargement de la page
-        // ============================================================
-        initialiserJeu();
-    </script>
+    }, 1000);
+}
+
+function tempEcoule() {
+    aRepondu = true;
+    mauvaisesReponses++;
+    document.querySelectorAll('.jeu-reponse-btn').forEach(btn => btn.disabled = true);
+    document.querySelectorAll('.jeu-reponse-btn')[questions[indexQuestion].correct]
+        .classList.add('correct');
+    afficherFeedback(false, "⏱ Temps écoulé ! Voici la bonne réponse.");
+    document.getElementById('jeu-suivant').style.display = 'block';
+}
+
+// ============================================================
+// VÉRIFIER LA RÉPONSE
+// ============================================================
+function verifierReponse(indexChoisi, btnChoisi, indexCorrect) {
+    if (aRepondu) return;
+    aRepondu = true;
+    clearInterval(timer);
+
+    const estCorrect = indexChoisi === indexCorrect;
+    document.querySelectorAll('.jeu-reponse-btn').forEach(btn => btn.disabled = true);
+
+    if (estCorrect) {
+        btnChoisi.classList.add('correct');
+        score++;
+        bonnesReponses++;
+        afficherFeedback(true, "✅ Bonne réponse !");
+    } else {
+        btnChoisi.classList.add('incorrect');
+        mauvaisesReponses++;
+        document.querySelectorAll('.jeu-reponse-btn')[indexCorrect].classList.add('correct');
+        afficherFeedback(false, "❌ Mauvaise réponse.");
+    }
+    document.getElementById('jeu-suivant').style.display = 'block';
+}
+
+function afficherFeedback(estCorrect, message) {
+    const feedback = document.getElementById('jeu-feedback');
+    feedback.textContent = message;
+    feedback.className = `jeu-feedback ${estCorrect ? 'correct' : 'incorrect'}`;
+    feedback.style.display = 'block';
+}
+
+function questionSuivante() {
+    indexQuestion++;
+    if (indexQuestion < questions.length) afficherQuestion();
+    else afficherResultats();
+}
+
+// ============================================================
+// RÉSULTATS
+// ============================================================
+function afficherResultats() {
+    clearInterval(timer);
+    document.getElementById('jeu-zone').style.display = 'none';
+    document.getElementById('jeu-resultats').style.display = 'block';
+
+    const xpGagnes = (bonnesReponses * 10) + (bonnesReponses === 10 ? 20 : 0);
+    let emoji = '😔';
+    if (score >= 8) emoji = '🏆';
+    else if (score >= 6) emoji = '🎉';
+    else if (score >= 4) emoji = '👍';
+
+    document.getElementById('res-emoji').textContent = emoji;
+    document.getElementById('res-score').textContent = `${score} / ${questions.length}`;
+    document.getElementById('res-xp').textContent = `+${xpGagnes} XP gagnés`;
+    document.getElementById('res-bonnes').textContent = bonnesReponses;
+    document.getElementById('res-mauvaises').textContent = mauvaisesReponses;
+    document.getElementById('res-temps').textContent =
+        `${Math.round(tempsTotal / questions.length)}s`;
+    document.getElementById('jeu-progress').style.width = '100%';
+
+    envoyerXP(xpGagnes);
+}
+
+// ============================================================
+// ENVOYER XP
+// ============================================================
+async function envoyerXP(xpGagnes) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const response = await fetch('/api/ajouter-xp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ pointsGagnes: xpGagnes })
+        });
+        const data = await response.json();
+        if (response.status === 403) return;
+        console.log('✅ XP envoyés :', data.message);
+    } catch (err) {
+        console.log('❌ Erreur envoi XP :', err);
+    }
+}
+
+function rejouer() {
+    initialiserJeu();
+}
+
+</script>
 </body>
 </html>
