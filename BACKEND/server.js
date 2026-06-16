@@ -502,59 +502,6 @@ app.post("/api/reset-password", async (req, res) => {
 
         const user = await User.findOne({ email });
 
-        if (user) {
-
-            const token = crypto.randomBytes(32).toString("hex");
-
-            user.resetToken = token;
-            user.resetTokenExpiration = Date.now() + 3600000;
-
-            await user.save();
-
-            const resetLink =
-                `https://scola.onrender.com/new-password.html?token=${token}`;
-
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: user.email,
-                subject: "Réinitialisation du mot de passe Scola",
-                html: `
-                    <h2>Réinitialisation du mot de passe</h2>
-                    <p>Clique sur le lien suivant :</p>
-                    <a href="${resetLink}">
-                        Réinitialiser mon mot de passe
-                    </a>
-                `
-            });
-        }
-
-        res.json({
-            message: "Si un compte existe, un email a été envoyé."
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.status(500).json({
-            message: "Erreur serveur"
-        });
-
-    }
-
-});
-// ================================
-// MOT DE PASSE OUBLIÉ
-// ================================
-
-app.post("/api/reset-password", async (req, res) => {
-
-    try {
-
-        const { email } = req.body;
-
-        const user = await User.findOne({ email });
-
         // Toujours répondre pareil pour la sécurité
         if (!user) {
             return res.json({
@@ -615,16 +562,16 @@ app.post("/api/reset-password", async (req, res) => {
             message: "Si un compte existe, un email a été envoyé."
         });
 
-   catch (err) {
+    } catch (err) {
 
-    console.error("ERREUR RESET PASSWORD :");
-    console.error(err);
+        console.error("ERREUR RESET PASSWORD :");
+        console.error(err);
 
-    res.status(500).json({
-        error: err.message
-    });
+        res.status(500).json({
+            error: err.message
+        });
 
-}
+    }
 
 });
 
