@@ -16,21 +16,24 @@ const cron = require("node-cron");
 
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS  // Sans espaces : znrbgrdoczmvdxqz
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS
     }
 });
 
-// ✅ TEST DE CONNEXION AU DÉMARRAGE — vérifie les logs Render
 transporter.verify((error, success) => {
     if (error) {
-        console.log("❌ Gmail ERREUR :", error.message);
+        console.log("❌ Brevo ERREUR :", error.message);
     } else {
-        console.log("✅ Gmail prêt à envoyer des emails");
+        console.log("✅ Brevo prêt à envoyer des emails");
     }
 });
+
+
 
 // ================================
 // MIDDLEWARES
