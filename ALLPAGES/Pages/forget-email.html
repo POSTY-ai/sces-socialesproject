@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scola — Mot de passe oublié</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #2563eb;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input[type="email"]:focus {
+            border-color: #2563eb;
+        }
+
+        input[type="email"]::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 1.25rem;
+            padding: 11px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .back:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .message.succes {
+            background: rgba(16, 185, 129, 0.15);
+            border: 0.5px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .message.erreur {
+            background: rgba(239, 68, 68, 0.15);
+            border: 0.5px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+
+        <div class="logo">Scola</div>
+        <div class="subtitle">Récupération du mot de passe</div>
+
+        <form id="resetForm">
+
+            <label for="resetEmail">Adresse email</label>
+            <input
+                type="email"
+                id="resetEmail"
+                placeholder="ton@email.com"
+                required
+                autocomplete="email"
+            >
+
+            <div class="message" id="message"></div>
+
+            <button class="btn" type="submit" id="btnReset">
+                <i class="ti ti-send"></i>
+                Envoyer le lien de réinitialisation
+            </button>
+
+        </form>
+
+        <a class="back" href="register.html">
+            <i class="ti ti-arrow-left"></i>
+            Retour à la connexion
+        </a>
+
+    </div>
+
+    <script>
+        document.getElementById("resetForm").addEventListener("submit", async function(e) {
+
+            e.preventDefault();
+
+            const email = document.getElementById("resetEmail").value.trim();
+            const btn = document.getElementById("btnReset");
+            const msg = document.getElementById("message");
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader-2"></i> Envoi en cours...';
+            msg.style.display = "none";
+
+            try {
+
+               const res = await fetch("/api/auth/forgot-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+
+                msg.className = "message succes";
+                msg.textContent = "✅ Si un compte existe avec cet email, tu recevras un lien dans quelques minutes. Vérifie aussi tes spams.";
+                msg.style.display = "block";
+
+                document.getElementById("resetEmail").value = "";
+
+            } catch (err) {
+
+                msg.className = "message erreur";
+                msg.textContent = "Erreur serveur. Réessaie dans quelques instants.";
+                msg.style.display = "block";
+
+            } finally {
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-send"></i> Envoyer le lien de réinitialisation';
+
+            }
+
+        });
+    </script>
+
+</body>
+</html>
