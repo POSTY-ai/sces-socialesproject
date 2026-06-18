@@ -13,24 +13,29 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("./models/user");
 const cron = require("node-cron");
-const Brevo = require('@getbrevo/brevo');
-
-// Configuration API Brevo
-const defaultClient = Brevo.ApiClient.instance;
-defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
-
-const apiInstance = new Brevo.TransactionalEmailsApi();
-
-// Fonction d'envoi d'email via API HTTP (pas SMTP)
+// Envoi email via API HTTP Brevo (fetch natif, pas de SDK)
 async function sendEmail(toEmail, toName, subject, htmlContent) {
-    const email = new Brevo.SendSmtpEmail();
-    email.sender = { name: "Scola", email: "noreply@scola.ht" };
-    email.to = [{ email: toEmail, name: toName }];
-    email.subject = subject;
-    email.htmlContent = htmlContent;
-    return await apiInstance.sendTransacEmail(email);
-}
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "api-key": process.env.BREVO_API_KEY
+        },
+        body: JSON.stringify({
+            sender: { name: "Scola", email: "noreply@scola.ht" },
+            to: [{ email: toEmail, name: toName }],
+            subject: subject,
+            htmlContent: htmlContent
+        })
+    });
 
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(JSON.stringify(err));
+    }
+
+    return await response.json();
+}
 
 // ================================
 // MIDDLEWARES
