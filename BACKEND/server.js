@@ -9,10 +9,11 @@ require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const cors= require('cors')
+const cors = require('cors');
 const crypto = require("crypto");
 const User = require("./models/user");
 const cron = require("node-cron");
+
 // Envoi email via API HTTP Brevo (fetch natif, pas de SDK)
 async function sendEmail(toEmail, toName, subject, htmlContent) {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -40,7 +41,7 @@ async function sendEmail(toEmail, toName, subject, htmlContent) {
 // ================================
 // MIDDLEWARES
 // ================================
-app.use(cors({origin:'https://scola.onrender.com'}));
+app.use(cors({ origin: 'https://scola.onrender.com' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../ALLPAGES")));
@@ -50,9 +51,7 @@ app.use(express.static(path.join(__dirname, "../ALLPAGES")));
 // ================================
 
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "../ALLPAGES/index.html")
-);
+    res.sendFile(path.join(__dirname, "../ALLPAGES/index.html"));
 });
 
 // ================================
@@ -65,24 +64,19 @@ app.post("/inscription", async (req, res) => {
 
         const { name, email, password } = req.body;
 
-           //valider nom
-
         // Minimum 2 caractères, lettres et espaces seulement, pas de chiffres
-const nomRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
-if (!nomRegex.test(name)) {
-    return res.status(400).json({
-        message: "Le nom doit contenir entre 2 et 50 lettres, sans chiffres ni caractères spéciaux."
-    });
-}
+        const nomRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
+        if (!nomRegex.test(name)) {
+            return res.status(400).json({
+                message: "Le nom doit contenir entre 2 et 50 lettres, sans chiffres ni caractères spéciaux."
+            });
+        }
 
-        //valider email
         // Format standard : quelquechose@domaine.extension
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-if (!emailRegex.test(email)) {
-    return res.status(400).json({
-        message: "Adresse email invalide."
-    });
-}
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Adresse email invalide." });
+        }
 
         // Validation du mot de passe : min 8 chars, 1 majuscule, 1 minuscule, 1 chiffre
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -92,29 +86,24 @@ if (!emailRegex.test(email)) {
             });
         }
 
-        // Vérifie si l'email existe déjà dans MongoDB
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email déjà utilisé" });
         }
 
-        // Hachage du mot de passe — 10 = niveau de sécurité (salt rounds)
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = new User({ name, email, password: hashedPassword });
         await newUser.save();
 
         const token = jwt.sign(
-    { email: newUser.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-);
+            { email: newUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
 
         console.log("✅ Nouvel utilisateur :", email);
-        res.status(200).json({
-    message: "Inscription réussie",
-    token
-});
+        res.status(200).json({ message: "Inscription réussie", token });
 
     } catch (err) {
         console.log(err);
@@ -138,18 +127,15 @@ app.post("/register", async (req, res) => {
             return res.status(404).json({ message: "Utilisateur introuvable" });
         }
 
-        // bcrypt.compare = compare le mot de passe entré avec le hash stocké
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res.status(401).json({ message: "Mot de passe incorrect" });
         }
 
-        // jwt.sign = crée un token avec les infos de l'utilisateur
-        // Ce token sera envoyé à chaque requête pour prouver l'identité
         const token = jwt.sign(
             { email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" } // expire dans 7 jours
+            { expiresIn: "7d" }
         );
 
         res.status(200).json({ message: "Connexion réussie", token });
@@ -163,8 +149,6 @@ app.post("/register", async (req, res) => {
 
 // ================================
 // MIDDLEWARE AUTH
-// Vérifie le token JWT avant d'accéder aux routes protégées
-// S'utilise comme : app.get("/route", auth, handler)
 // ================================
 
 function auth(req, res, next) {
@@ -174,29 +158,20 @@ function auth(req, res, next) {
         return res.status(401).json({ message: "Accès refusé — token manquant" });
     }
 
-    // Le header ressemble à "Bearer eyJhbGci..." — on prend la partie après "Bearer "
     const token = authHeader.replace("Bearer ", "");
 
     try {
-        // jwt.verify = décode et vérifie le token. Lance une erreur si invalide ou expiré
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // on attache les infos décodées à la requête
-        next(); // tout est ok, on passe à la route
+        req.user = decoded;
+        next();
     } catch (err) {
         return res.status(401).json({ message: "Token invalide ou expiré" });
     }
 
 }
-// ============================================================
-// ROUTES PREMIUM — À COLLER DANS TON server.js EXISTANT
-// Colle ce bloc après ton middleware "auth" existant
-// ============================================================
-
 
 // ================================
 // MIDDLEWARE PREMIUM
-// Vérifie que l'utilisateur a le bon rôle
-// Utilisation : checkPremium(["pro","ia"]) comme 2e argument d'une route
 // ================================
 
 function checkPremium(rolesAutorises) {
@@ -209,7 +184,6 @@ function checkPremium(rolesAutorises) {
                 return res.status(404).json({ message: "Utilisateur introuvable" });
             }
 
-            // Si l'abonnement est expiré → on rétrograde automatiquement
             if (user.premiumExpiry && new Date() > new Date(user.premiumExpiry)) {
                 user.role = "gratuit";
                 user.premiumExpiry = null;
@@ -220,7 +194,6 @@ function checkPremium(rolesAutorises) {
                 });
             }
 
-            // Vérifie si le rôle est dans la liste autorisée
             if (!rolesAutorises.includes(user.role)) {
                 return res.status(403).json({
                     locked: true,
@@ -229,7 +202,7 @@ function checkPremium(rolesAutorises) {
                 });
             }
 
-            req.userDoc = user; // attache le doc complet pour éviter un 2e appel DB
+            req.userDoc = user;
             next();
 
         } catch (err) {
@@ -239,11 +212,8 @@ function checkPremium(rolesAutorises) {
     };
 }
 
-
 // ================================
 // GET /api/me
-// Retourne le rôle et le statut premium de l'utilisateur connecté
-// Appelé au chargement de chaque page pour adapter l'UI
 // ================================
 
 app.get("/api/me", auth, async (req, res) => {
@@ -251,10 +221,8 @@ app.get("/api/me", auth, async (req, res) => {
     try {
 
         const user = await User.findOne({ email: req.user.email });
-
         if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        // Vérifie expiration à la volée
         let role = user.role;
         let premiumExpiry = user.premiumExpiry;
 
@@ -282,12 +250,8 @@ app.get("/api/me", auth, async (req, res) => {
 
 });
 
-
 // ================================
-// POST /api/premium/activer
-// Active le premium pour un utilisateur après paiement confirmé
-// En production : appelé après confirmation MonCash/paiement
-// Pour l'instant : route admin manuelle
+// POST /api/premium/activer (admin)
 // ================================
 
 app.post("/api/premium/activer", auth, async (req, res) => {
@@ -295,11 +259,8 @@ app.post("/api/premium/activer", auth, async (req, res) => {
     try {
 
         const { email, tier, dureeJours } = req.body;
-        // tier = "pro" ou "ia"
-        // dureeJours = 30, 90, 365...
 
-        // Vérifie que c'est un admin (ton email)
-        const ADMIN_EMAILS = ["jonathanfortune07@gmail.com"]; // ← ton email admin
+        const ADMIN_EMAILS = ["jonathanfortune07@gmail.com"];
         if (!ADMIN_EMAILS.includes(req.user.email)) {
             return res.status(403).json({ message: "Accès refusé" });
         }
@@ -307,7 +268,6 @@ app.post("/api/premium/activer", auth, async (req, res) => {
         const cible = await User.findOne({ email });
         if (!cible) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        // Calcule la date d'expiration
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + Number(dureeJours));
 
@@ -316,11 +276,7 @@ app.post("/api/premium/activer", auth, async (req, res) => {
         await cible.save();
 
         console.log(`✅ Premium activé pour ${email} — tier: ${tier} — expire: ${expiry}`);
-
-        res.json({
-            message: `Premium ${tier} activé pour ${email}`,
-            expiry
-        });
+        res.json({ message: `Premium ${tier} activé pour ${email}`, expiry });
 
     } catch (err) {
         console.log(err);
@@ -329,11 +285,8 @@ app.post("/api/premium/activer", auth, async (req, res) => {
 
 });
 
-
 // ================================
 // GET /api/examens
-// Retourne les anciens examens selon le rôle
-// Gratuit → 3 examens | Pro/IA → tous
 // ================================
 
 app.get("/api/examens", auth, async (req, res) => {
@@ -342,14 +295,12 @@ app.get("/api/examens", auth, async (req, res) => {
 
         const user = await User.findOne({ email: req.user.email });
 
-        // Vérifie expiration
         if (user.premiumExpiry && new Date() > new Date(user.premiumExpiry)) {
             user.role = "gratuit";
             user.premiumExpiry = null;
             await user.save();
         }
 
-        // Liste complète des 18 examens (remplace les IDs par tes vrais IDs Google Drive)
         const tousLesExamens = [
             { id: 1, titre: "Bac 2024 — Session 1", annee: 2024, driveId: "DRIVE_ID_1", gratuit: true },
             { id: 2, titre: "Bac 2024 — Session 2", annee: 2024, driveId: "DRIVE_ID_2", gratuit: true },
@@ -374,10 +325,8 @@ app.get("/api/examens", auth, async (req, res) => {
         const estPremium = ["pro", "ia"].includes(user.role);
 
         if (estPremium) {
-            // Pro/IA → tous les examens avec les vrais driveIds
             return res.json({ role: user.role, examens: tousLesExamens });
         } else {
-            // Gratuit → seulement les 3 marqués gratuit: true, sans driveId pour les autres
             const examensGratuits = tousLesExamens.map(e => ({
                 ...e,
                 driveId: e.gratuit ? e.driveId : null,
@@ -393,11 +342,8 @@ app.get("/api/examens", auth, async (req, res) => {
 
 });
 
-
 // ================================
-// GET /api/quiz/check (MODIFIÉ)
-// Gratuit → max 3 quiz/jour
-// Pro/IA → illimité
+// GET /api/quiz/check-pro
 // ================================
 
 app.get("/api/quiz/check-pro", auth, async (req, res) => {
@@ -408,15 +354,12 @@ app.get("/api/quiz/check-pro", auth, async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Pro/IA → toujours peut jouer
         if (["pro", "ia"].includes(user.role)) {
             return res.json({ canPlay: true, role: user.role, limite: false });
         }
 
-        // Gratuit → vérifie le compteur journalier
         const LIMITE_GRATUIT = 3;
 
-        // Reset le compteur si c'est un nouveau jour
         if (user.dailyQuiz.lastCountReset) {
             const lastReset = new Date(user.dailyQuiz.lastCountReset);
             lastReset.setHours(0, 0, 0, 0);
@@ -453,10 +396,8 @@ app.get("/api/quiz/check-pro", auth, async (req, res) => {
 
 });
 
-
 // ================================
 // POST /api/quiz/increment
-// Incrémente le compteur de quiz joués (appelé après chaque quiz)
 // ================================
 
 app.post("/api/quiz/increment", auth, async (req, res) => {
@@ -465,7 +406,6 @@ app.post("/api/quiz/increment", auth, async (req, res) => {
 
         const user = await User.findOne({ email: req.user.email });
 
-        // Pro/IA → on ne compte pas
         if (["pro", "ia"].includes(user.role)) {
             return res.json({ message: "OK" });
         }
@@ -482,12 +422,8 @@ app.post("/api/quiz/increment", auth, async (req, res) => {
 
 });
 
-
 // ================================
 // GET /api/chapitres/:id
-// Retourne le contenu d'un chapitre selon le rôle
-// Gratuit → introduction seulement
-// Pro/IA → contenu complet
 // ================================
 
 app.get("/api/chapitres/:id", auth, async (req, res) => {
@@ -497,15 +433,11 @@ app.get("/api/chapitres/:id", auth, async (req, res) => {
         const user = await User.findOne({ email: req.user.email });
         const estPremium = ["pro", "ia"].includes(user.role);
 
-        // Simule une base de chapitres (adapte selon ta structure réelle)
-        // En production, tu tireras ça de MongoDB
         const chapitre = {
             id: req.params.id,
             titre: "Chapitre demandé",
             introduction: "Contenu d'introduction disponible pour tous...",
-            contenuComplet: estPremium
-                ? "Contenu complet avec exercices, résumés et quiz..."
-                : null,
+            contenuComplet: estPremium ? "Contenu complet avec exercices, résumés et quiz..." : null,
             locked: !estPremium
         };
 
@@ -518,10 +450,8 @@ app.get("/api/chapitres/:id", auth, async (req, res) => {
 
 });
 
-
 // ================================
 // POST /api/premium/desactiver (admin)
-// Rétrograde un utilisateur vers gratuit
 // ================================
 
 app.post("/api/premium/desactiver", auth, async (req, res) => {
@@ -559,48 +489,30 @@ app.get("/dashboard", auth, (req, res) => {
 });
 
 // ================================
-// PROFIL UTILISATEUR
-// Retourne toutes les données du profil pour la page profile.html
-// Route protégée — nécessite d'être connecté
+// GET /api/profile
 // ================================
 
 app.get("/api/profile", auth, async (req, res) => {
 
     try {
 
-        // Chercher l'utilisateur dans MongoDB par son email (décodé du token)
         const user = await User.findOne({ email: req.user.email });
+        if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        if (!user) {
-            return res.status(404).json({ message: "Utilisateur introuvable" });
-        }
-
-        // Calculer le classement de cet utilisateur
-        // On trie tous les users par XP décroissant et on trouve sa position
         const classement = await User.find().sort({ "weeklyLeague.xp": -1 });
         const rank = classement.findIndex(u => u.email === user.email) + 1;
-        // findIndex retourne -1 si pas trouvé, +1 pour avoir un rang qui commence à 1
 
-        // Compter les badges débloqués
-        // On renvoie les stats brutes — le frontend calcule les badges lui-même
         res.json({
-
-            // Infos personnelles
             name: user.name,
             email: user.email,
             createdAt: user.createdAt,
-
-            // Stats de la ligue
             xp: user.weeklyLeague.xp,
             xpToday: user.weeklyLeague.xpToday,
             streak: user.weeklyLeague.streak,
             league: user.weeklyLeague.league,
             lastActivity: user.weeklyLeague.lastActivity,
-
-            // Classement
             rank,
             totalPlayers: classement.length
-
         });
 
     } catch (err) {
@@ -610,10 +522,8 @@ app.get("/api/profile", auth, async (req, res) => {
 
 });
 
-
 // ================================
-// AJOUTER XP
-// Appelé depuis jouer.html à la fin de chaque session
+// POST /api/ajouter-xp
 // ================================
 
 app.post("/api/ajouter-xp", auth, async (req, res) => {
@@ -624,32 +534,18 @@ app.post("/api/ajouter-xp", auth, async (req, res) => {
         console.log("Points reçus =", points);
 
         const user = await User.findOne({ email: req.user.email });
-
-        if (!user) {
-            return res.status(404).json({ message: "Utilisateur introuvable" });
-        }
+        if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
         console.log("XP avant =", user.weeklyLeague.xp);
 
-        // ==========================
-        // AJOUT DES XP
-        // ==========================
-
-        user.weeklyLeague.xp =
-            Number(user.weeklyLeague.xp || 0) + points;
-
-        user.weeklyLeague.xpToday =
-            Number(user.weeklyLeague.xpToday || 0) + points;
-
-        // XP total à vie
+        // Ajout des XP
+        user.weeklyLeague.xp = Number(user.weeklyLeague.xp || 0) + points;
+        user.weeklyLeague.xpToday = Number(user.weeklyLeague.xpToday || 0) + points;
         user.xpTotal = Number(user.xpTotal || 0) + points;
 
         console.log("XP après =", user.weeklyLeague.xp);
 
-        // ==========================
-        // MISE À JOUR DE LA LIGUE
-        // ==========================
-
+        // Mise à jour de la ligue selon XP hebdomadaire
         if (user.weeklyLeague.xp >= 5000) {
             user.weeklyLeague.league = "Diamant";
         } else if (user.weeklyLeague.xp >= 2000) {
@@ -662,30 +558,20 @@ app.post("/api/ajouter-xp", auth, async (req, res) => {
             user.weeklyLeague.league = "Bronze";
         }
 
-        // ==========================
-        // CALCUL DU STREAK
-        // ==========================
-
+        // Calcul du streak
         const today = new Date();
 
         if (!user.weeklyLeague.lastActivity) {
-
             user.weeklyLeague.streak = 1;
-
         } else {
-
             const lastDate = new Date(user.weeklyLeague.lastActivity);
-
-            const diffDays = Math.floor(
-                (today - lastDate) / (1000 * 60 * 60 * 24)
-            );
+            const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
 
             if (diffDays === 1) {
                 user.weeklyLeague.streak += 1;
             } else if (diffDays > 1) {
                 user.weeklyLeague.streak = 1;
             }
-
         }
 
         user.weeklyLeague.lastActivity = today;
@@ -702,19 +588,14 @@ app.post("/api/ajouter-xp", auth, async (req, res) => {
         });
 
     } catch (err) {
-
         console.log(err);
-
-        res.status(500).json({
-            message: "Erreur serveur"
-        });
-
+        res.status(500).json({ message: "Erreur serveur" });
     }
 
 });
 
 // ================================
-// PROFIL LIGUE DU JOUEUR (liguebac.html)
+// GET /api/league/me
 // ================================
 
 app.get("/api/league/me", auth, async (req, res) => {
@@ -746,13 +627,12 @@ app.get("/api/league/me", auth, async (req, res) => {
 });
 
 // ================================
-// TOP 3 DE LA LIGUE
+// GET /api/league/top
 // ================================
 
 app.get("/api/league/top", async (req, res) => {
 
     try {
-        // .limit(3) = retourne seulement les 3 premiers
         const top = await User.find().sort({ "weeklyLeague.xp": -1 }).limit(3);
         res.json(top);
     } catch (err) {
@@ -763,13 +643,12 @@ app.get("/api/league/top", async (req, res) => {
 });
 
 // ================================
-// CLASSEMENT COMPLET
+// GET /api/league/leaderboard
 // ================================
 
 app.get("/api/league/leaderboard", async (req, res) => {
 
     try {
-        // .limit(30) = max 30 joueurs dans un groupe de ligue
         const users = await User.find().sort({ "weeklyLeague.xp": -1 }).limit(30);
         res.json(users);
     } catch (err) {
@@ -780,8 +659,7 @@ app.get("/api/league/leaderboard", async (req, res) => {
 });
 
 // ================================
-// VÉRIFICATION QUIZ JOURNALIER
-// Vérifie si l'élève peut encore jouer aujourd'hui
+// GET /api/quiz/check
 // ================================
 
 app.get("/api/quiz/check", auth, async (req, res) => {
@@ -789,14 +667,12 @@ app.get("/api/quiz/check", auth, async (req, res) => {
     try {
 
         const user = await User.findOne({ email: req.user.email });
-
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // début de la journée à minuit
+        today.setHours(0, 0, 0, 0);
 
         if (user.dailyQuiz.lastPlayed) {
             const lastPlayed = new Date(user.dailyQuiz.lastPlayed);
             lastPlayed.setHours(0, 0, 0, 0);
-            // .getTime() = convertit la date en millisecondes pour comparer
             if (lastPlayed.getTime() === today.getTime()) {
                 return res.json({ canPlay: false });
             }
@@ -812,39 +688,54 @@ app.get("/api/quiz/check", auth, async (req, res) => {
 });
 
 // ================================
-// RESET LIGUE (à appeler manuellement ou via cron)
+// FONCTION RESET LIGUE
+// Récompense top 3, remet XP à 0, remet league à Bronze
 // ================================
 
-app.get("/reset-league", async (req, res) => {
+async function resetLigue() {
 
+    // 1. Récompenser le top 3 (XP total à vie, pas le weekly)
+    const top = await User.find().sort({ "weeklyLeague.xp": -1 }).limit(3);
+    const bonus = [300, 200, 100];
+
+    for (let i = 0; i < top.length; i++) {
+        top[i].xpTotal = Number(top[i].xpTotal || 0) + bonus[i];
+        await top[i].save();
+        console.log(`🏆 ${top[i].name} — +${bonus[i]} XP total (place ${i + 1})`);
+    }
+
+    // 2. Reset XP hebdomadaire + league pour tous les joueurs
     await User.updateMany({}, {
         $set: {
             "weeklyLeague.xp": 0,
-            "weeklyLeague.xpToday": 0
+            "weeklyLeague.xpToday": 0,
+            "weeklyLeague.league": "Bronze",
+            "weeklyLeague.weekStartDate": new Date()
         }
     });
 
-    res.send("✅ Ligue réinitialisée");
-
-});
+    console.log("✅ Ligue réinitialisée — tous les joueurs remis en Bronze.");
+}
 
 // ================================
-// RÉCOMPENSE TOP 3
+// POST /api/admin/reset-league (admin seulement)
+// Pour déclencher le reset manuellement
 // ================================
 
-app.get("/recompense-top3", async (req, res) => {
+app.post("/api/admin/reset-league", auth, async (req, res) => {
 
-    const top = await User.find().sort({ "weeklyLeague.xp": -1 }).limit(3);
-
-    if (top[0]) top[0].weeklyLeague.xp += 300;
-    if (top[1]) top[1].weeklyLeague.xp += 200;
-    if (top[2]) top[2].weeklyLeague.xp += 100;
-
-    for (const joueur of top) {
-        await joueur.save();
+    const ADMIN_EMAILS = ["jonathanfortune07@gmail.com"];
+    if (!ADMIN_EMAILS.includes(req.user.email)) {
+        return res.status(403).json({ message: "Accès refusé" });
     }
 
-    res.send("✅ Récompenses distribuées");
+    try {
+        await resetLigue();
+        res.json({ success: true, message: "✅ Ligue réinitialisée manuellement." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Erreur serveur" });
+    }
 
 });
 
@@ -860,7 +751,8 @@ app.get("/fix-league", async (req, res) => {
             $set: {
                 weeklyLeague: {
                     xp: 0, xpToday: 0, streak: 0,
-                    league: "Bronze", lastActivity: null
+                    league: "Bronze", lastActivity: null,
+                    weekStartDate: new Date()
                 }
             }
         }
@@ -879,55 +771,41 @@ app.post("/api/reset-password", async (req, res) => {
     try {
 
         const { email } = req.body;
-
         const user = await User.findOne({ email });
 
-        // Toujours répondre pareil pour la sécurité
         if (!user) {
-            return res.json({
-                message: "Si un compte existe, un email a été envoyé."
-            });
+            return res.json({ message: "Si un compte existe, un email a été envoyé." });
         }
 
-        // Générer un token unique
         const token = crypto.randomBytes(32).toString("hex");
 
-        // Expire dans 1 heure
         user.resetToken = token;
         user.resetTokenExpiration = Date.now() + 3600000;
-
         await user.save();
 
         const resetLink = `https://scola.onrender.com/Pages/reset-password.html?token=${token}`;
 
-       await sendEmail(
-    user.email,
-    user.name,
-    "Réinitialisation du mot de passe Scola",
-    `
-    <h2>Réinitialisation du mot de passe</h2>
-    <p>Bonjour ${user.name},</p>
-    <p>Clique sur le bouton ci-dessous pour réinitialiser ton mot de passe :</p>
-    <a href="${resetLink}" style="display:inline-block;padding:12px 20px;background:#2563eb;color:white;text-decoration:none;border-radius:6px;">
-        Réinitialiser mon mot de passe
-    </a>
-    <p>Ce lien expire dans 1 heure.</p>
-    `
-);
+        await sendEmail(
+            user.email,
+            user.name,
+            "Réinitialisation du mot de passe Scola",
+            `
+            <h2>Réinitialisation du mot de passe</h2>
+            <p>Bonjour ${user.name},</p>
+            <p>Clique sur le bouton ci-dessous pour réinitialiser ton mot de passe :</p>
+            <a href="${resetLink}" style="display:inline-block;padding:12px 20px;background:#2563eb;color:white;text-decoration:none;border-radius:6px;">
+                Réinitialiser mon mot de passe
+            </a>
+            <p>Ce lien expire dans 1 heure.</p>
+            `
+        );
 
-        res.json({
-            message: "Si un compte existe, un email a été envoyé."
-        });
+        res.json({ message: "Si un compte existe, un email a été envoyé." });
 
     } catch (err) {
-
         console.error("ERREUR RESET PASSWORD :");
         console.error(err);
-
-        res.status(500).json({
-            error: err.message
-        });
-
+        res.status(500).json({ error: err.message });
     }
 
 });
@@ -940,19 +818,24 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB connecté"))
     .catch((err) => console.log("❌ Erreur MongoDB :", err));
 
+// ================================
+// CRON — RESET LIGUE AUTOMATIQUE
+// Tous les lundis à 00h00
+// ================================
 
-cron.schedule("59 23 * * 5", async () => {
-    await User.updateMany({}, {
-        $set: {
-            "weeklyLeague.xp": 0,
-            "weeklyLeague.xpToday": 0
-        }
-    });
-    console.log("✅ Ligue réinitialisée automatiquement !");
+cron.schedule("0 0 * * 1", async () => {
+    try {
+        console.log("⏰ Déclenchement reset ligue automatique...");
+        await resetLigue();
+    } catch (err) {
+        console.error("❌ Erreur reset ligue automatique :", err);
+    }
 });
+
 // ================================
 // DÉMARRAGE SERVEUR
 // ================================
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
@@ -960,8 +843,7 @@ app.listen(PORT, () => {
 });
 
 // ================================
-// MODIFIER EMAIL + NOM
-// PUT /api/profile
+// PUT /api/profile — MODIFIER EMAIL + NOM
 // ================================
 
 app.put("/api/profile", auth, async (req, res) => {
@@ -969,34 +851,26 @@ app.put("/api/profile", auth, async (req, res) => {
     try {
 
         const { name, email } = req.body;
-           //valider nom
 
-        // Minimum 2 caractères, lettres et espaces seulement, pas de chiffres
-const nomRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
-if (!nomRegex.test(name)) {
-    return res.status(400).json({
-        message: "Le nom doit contenir entre 2 et 50 lettres, sans chiffres ni caractères spéciaux."
-    });
-}
+        const nomRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
+        if (!nomRegex.test(name)) {
+            return res.status(400).json({
+                message: "Le nom doit contenir entre 2 et 50 lettres, sans chiffres ni caractères spéciaux."
+            });
+        }
 
-        //valider email
-        // Format standard : quelquechose@domaine.extension
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-if (!emailRegex.test(email)) {
-    return res.status(400).json({
-        message: "Adresse email invalide."
-    });
-}
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Adresse email invalide." });
+        }
 
         if (!name || !email) {
             return res.status(400).json({ message: "Nom et email obligatoires" });
         }
 
-        // Vérifier si le nouvel email est déjà utilisé par quelqu'un d'autre
         const emailExistant = await User.findOne({
             email,
             _id: { $ne: req.user._id }
-            // $ne = "not equal" — exclut l'utilisateur actuel de la recherche
         });
 
         if (emailExistant) {
@@ -1019,8 +893,7 @@ if (!emailRegex.test(email)) {
 });
 
 // ================================
-// CHANGER MOT DE PASSE
-// PUT /api/profile/password
+// PUT /api/profile/password — CHANGER MOT DE PASSE
 // ================================
 
 app.put("/api/profile/password", auth, async (req, res) => {
@@ -1032,15 +905,11 @@ app.put("/api/profile/password", auth, async (req, res) => {
         const user = await User.findOne({ email: req.user.email });
         if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        // Vérifier que l'ancien mot de passe est correct
         const match = await bcrypt.compare(ancienMotDePasse, user.password);
         if (!match) {
             return res.status(401).json({ message: "Mot de passe actuel incorrect" });
         }
 
-     
-
-        // Valider le nouveau mot de passe
         const mdpRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         if (!mdpRegex.test(nouveauMotDePasse)) {
             return res.status(400).json({
@@ -1048,7 +917,6 @@ app.put("/api/profile/password", auth, async (req, res) => {
             });
         }
 
-        // Hacher le nouveau mot de passe avant de sauvegarder
         const hashedNouveauMdp = await bcrypt.hash(nouveauMotDePasse, 10);
 
         await User.findOneAndUpdate(
@@ -1066,17 +934,14 @@ app.put("/api/profile/password", auth, async (req, res) => {
 });
 
 // ================================
-// SUPPRIMER LE COMPTE
-// DELETE /api/profile
+// DELETE /api/profile — SUPPRIMER LE COMPTE
 // ================================
 
 app.delete("/api/profile", auth, async (req, res) => {
 
     try {
 
-        // deleteOne = supprime le document correspondant dans MongoDB
         await User.deleteOne({ email: req.user.email });
-
         console.log("🗑️ Compte supprimé :", req.user.email);
         res.json({ message: "Compte supprimé avec succès" });
 
@@ -1086,16 +951,9 @@ app.delete("/api/profile", auth, async (req, res) => {
     }
 
 });
-// ============================================================
-// ROUTE SIMULATION PAIEMENT — À COLLER DANS server.js
-// Simule un paiement MonCash et active le premium
-// En production : remplace par la vraie vérification MonCash
-// ============================================================
-
 
 // ================================
 // POST /api/paiement/simuler
-// Simule un paiement réussi et active le premium
 // ================================
 
 app.post("/api/paiement/simuler", auth, async (req, res) => {
@@ -1104,12 +962,10 @@ app.post("/api/paiement/simuler", auth, async (req, res) => {
 
         const { tier, montant } = req.body;
 
-        // Vérifie que le tier est valide
         if (!["pro", "ia"].includes(tier)) {
             return res.status(400).json({ message: "Tier invalide" });
         }
 
-        // Vérifie que le montant correspond au tier
         const prixAttendus = { pro: 500, ia: 800 };
         if (montant !== prixAttendus[tier]) {
             return res.status(400).json({ message: "Montant incorrect" });
@@ -1118,16 +974,13 @@ app.post("/api/paiement/simuler", auth, async (req, res) => {
         const user = await User.findOne({ email: req.user.email });
         if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        // Calcule la date d'expiration (30 jours)
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
 
-        // Active le premium
         user.role = tier;
         user.premiumExpiry = expiry;
         await user.save();
 
-        // Génère un faux ID de transaction pour la simulation
         const fakeTransactionId = "SIM-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 
         console.log(`✅ [SIMULATION] Premium ${tier} activé pour ${req.user.email} — expire: ${expiry}`);
@@ -1147,11 +1000,8 @@ app.post("/api/paiement/simuler", auth, async (req, res) => {
 
 });
 
-
 // ================================
 // GET /api/paiement/statut
-// Vérifie le statut premium de l'utilisateur
-// Appelé après retour de la page paiement
 // ================================
 
 app.get("/api/paiement/statut", auth, async (req, res) => {
@@ -1161,7 +1011,6 @@ app.get("/api/paiement/statut", auth, async (req, res) => {
         const user = await User.findOne({ email: req.user.email });
         if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-        // Vérifie expiration
         if (user.premiumExpiry && new Date() > new Date(user.premiumExpiry)) {
             user.role = "gratuit";
             user.premiumExpiry = null;

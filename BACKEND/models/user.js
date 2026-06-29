@@ -59,7 +59,8 @@ const userSchema = new mongoose.Schema({
         lastActivity: {
             type: Date,
             default: null
-        }
+        },
+    weekStartDate: { type: Date, default: null }
 
     },
 
